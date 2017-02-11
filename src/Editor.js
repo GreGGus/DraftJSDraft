@@ -1,65 +1,86 @@
 import React, { Component } from 'react';
-import { Entity, Modifier, CompositeDecorator, convertFromRaw, EditorState,RichUtils} from 'draft-js';
-import Editor from 'draft-js-plugins-editor';
-import initialState from './initialeStateEditor.js'
+import { Modifier,
+  convertFromRaw,
+  EditorState,RichUtils,
+} from 'draft-js';
+// eslint-disable-next-line import/no-unresolved
+import Editor, { composeDecorators } from 'draft-js-plugins-editor';
+// eslint-disable-next-line import/no-unresolved
+import createImagePlugin from 'draft-js-image-plugin';
+// eslint-disable-next-line import/no-unresolved
+import createAlignmentPlugin from 'draft-js-alignment-plugin';
+// eslint-disable-next-line import/no-unresolved
+import createFocusPlugin from 'draft-js-focus-plugin';
+// eslint-disable-next-line import/no-unresolved
+import createResizeablePlugin from 'draft-js-resizeable-plugin';
+// eslint-disable-next-line import/no-unresolved
+import createDndPlugin from 'draft-js-dnd-plugin';
 
-import Plugins from './createPlugins.js'
-import mentions from './mentions.js'
-const plugins = Plugins()
+const focusPlugin = createFocusPlugin();
+const resizeablePlugin = createResizeablePlugin();
+const dndPlugin = createDndPlugin();
+const alignmentPlugin = createAlignmentPlugin();
+const { AlignmentTool } = alignmentPlugin;
+
+const decorator = composeDecorators(
+  resizeablePlugin.decorator,
+  alignmentPlugin.decorator,
+  focusPlugin.decorator,
+  dndPlugin.decorator
+);
+
+const imagePlugin = createImagePlugin({ decorator });
+const plugins = [dndPlugin, focusPlugin, alignmentPlugin, resizeablePlugin, imagePlugin];
+
+
 //import '..\\node_modules\\draft-js-image-plugin\\lib\\plugin.css';
 import '..\\node_modules\\draft-js-focus-plugin\\lib\\plugin.css'
-import '..\\node_modules\\draft-js-mention-plugin\\lib\\plugin.css'
-//import '.\\RichEditor.css'
+import '.\\RichEditor.css'
 //import '..\\node_modules\\draft-js-dnd-plugin\\lib\\plugin.css'
-import createMentionPlugin, { defaultSuggestionsFilter } from 'draft-js-mention-plugin'; // eslint-disable-line import/no-unresolved
 
-const mentionPlugin = createMentionPlugin();
-
-export const { MentionSuggestions } = mentionPlugin;
-
-
-      /**
-         * Super simple decorators for handles and hashtags, for demonstration
-         * purposes only. Don't reuse these regexes.
-         */
-        const HANDLE_REGEX = /\@[\w]+/g;
-        const HASHTAG_REGEX = /\#[\w\u0590-\u05ff]+/g;
-
-        function handleStrategy(contentBlock, callback) {
-          findWithRegex(HANDLE_REGEX, contentBlock, callback);
+/* eslint-disable */
+const initialState = {
+    "entityMap": {
+        "0": {
+            "type": "image",
+            "mutability": "IMMUTABLE",
+            "data": {
+                "src": "http://images.math.cnrs.fr/IMG/png/section8-image.png"
+            }
         }
-
-        function hashtagStrategy(contentBlock, callback) {
-          findWithRegex(HASHTAG_REGEX, contentBlock, callback);
-        }
-
-        function findWithRegex(regex, contentBlock, callback) {
-          const text = contentBlock.getText();
-          let matchArr, start;
-          while ((matchArr = regex.exec(text)) !== null) {
-            start = matchArr.index;
-            callback(start, start + matchArr[0].length);
-          }
-        }
-
-        const HandleSpan = (props) => {
-          return <span {...props} style={styles.handle}>{props.children}</span>;
-        };
-
-        const HashtagSpan = (props) => {
-          return <span {...props} style={styles.hashtag}>{props.children}</span>;
-        };
-
-        const customDecorator = [
-                  {
-                    strategy: handleStrategy,
-                    component: HandleSpan,
-                  },
-                  {
-                    strategy: hashtagStrategy,
-                    component: HashtagSpan,
-                  },
-                ];
+    },
+    "blocks": [{
+        "key": "9gm3s",
+        "text": "You can have images in your text field. This is a very rudimentary example, but you can enhance the image plugin with resizing, focus or alignment plugins.",
+        "type": "unstyled",
+        "depth": 0,
+        "inlineStyleRanges": [],
+        "entityRanges": [],
+        "data": {}
+    },
+    {
+        "key": "ov7r",
+        "text": " ",
+        "type": "atomic",
+        "depth": 0,
+        "inlineStyleRanges": [],
+        "entityRanges": [{
+            "offset": 0,
+            "length": 1,
+            "key": 0
+        }],
+        "data": {}
+    }, {
+        "key": "e23a8",
+        "text": "See advanced examples further down …",
+        "type": "unstyled",
+        "depth": 0,
+        "inlineStyleRanges": [],
+        "entityRanges": [],
+        "data": {}
+    }]
+};
+/* eslint-enable */
 
 export default class CustomImageEditor extends Component {
 
@@ -68,46 +89,26 @@ export default class CustomImageEditor extends Component {
     super(props);
     this.state = {
       editorState: EditorState.createWithContent(convertFromRaw(initialState)),
-      suggestions: mentions,
     };
 
+  //  this.focus = () => this.refs.editor.focus();
     this.handleKeyCommand = (command) => this._handleKeyCommand(command);
     this.onTab = (e) => this._onTab(e);
-    this.toggleColor = (toggledColor) => this._toggleColor(toggledColor);
     this.toggleBlockType = (type) => this._toggleBlockType(type);
     this.toggleInlineStyle = (style) => this._toggleInlineStyle(style);
-
+    this.toggleColor = (toggledColor) => this._toggleColor(toggledColor);
 }
 
-_toggleBlockType(blockType) {
-  this.onChange(
-    RichUtils.toggleBlockType(
-      this.state.editorState,
-      blockType
-    )
-  );
-}
-
-_toggleInlineStyle(inlineStyle) {
-  this.onChange(
-    RichUtils.toggleInlineStyle(
-      this.state.editorState,
-      inlineStyle
-    )
-  );
-}
 _toggleColor(toggledColor) {
-
   const {editorState} = this.state;
   const selection = editorState.getSelection();
 
+console.log("ça passe")
   // Let's just allow one color at a time. Turn off all active colors.
   const nextContentState = Object.keys(colorStyleMap)
     .reduce((contentState, color) => {
-      console.log(color)
       return Modifier.removeInlineStyle(contentState, selection, color)
     }, editorState.getCurrentContent());
-
 
   let nextEditorState = EditorState.push(
     editorState,
@@ -116,6 +117,7 @@ _toggleColor(toggledColor) {
   );
 
   const currentStyle = editorState.getCurrentInlineStyle();
+
   // Unset style override for current color.
   if (selection.isCollapsed()) {
     nextEditorState = currentStyle.reduce((state, color) => {
@@ -125,31 +127,14 @@ _toggleColor(toggledColor) {
 
   // If the color is being toggled on, apply it.
   if (!currentStyle.has(toggledColor)) {
-    console.log("togggle")
     nextEditorState = RichUtils.toggleInlineStyle(
       nextEditorState,
       toggledColor
     );
   }
 
+console.log(nextEditorState)
   this.onChange(nextEditorState);
-}
-
-clickAddEntity(){
-  const entityKey = Entity.create('LINK', 'MUTABLE', {href: 'http://www.zombo.com'});
-
-  const contentState=this.state.editorState.getCurrentContent();
-  const selectionState=this.state.editorState.getSelection();
-  const contentStateWithLink = Modifier.applyEntity(
-  contentState,
-  selectionState,
-  entityKey
-);
-console.log("av")
-this.onChange(contentStateWithLink);
-console.log(this.state.editorState)
-console.log(this.state.editorState.getCurrentContent())
-console.log("ap")
 }
 
 
@@ -168,15 +153,22 @@ _onTab(e) {
     return false;
   }
 
-// Mentions
-onSearchChange = ({ value }) => {
-    this.setState({
-      suggestions: defaultSuggestionsFilter(value, mentions),
-    });
-  };
+  _toggleBlockType(blockType) {
+    this.onChange(
+      RichUtils.toggleBlockType(
+        this.state.editorState,
+        blockType
+      )
+    );
+  }
 
-  onAddMention = () => {
-    // liaison proc
+  _toggleInlineStyle(inlineStyle) {
+    this.onChange(
+      RichUtils.toggleInlineStyle(
+        this.state.editorState,
+        inlineStyle
+      )
+    );
   }
 
   onChange = (editorState) => {
@@ -190,12 +182,9 @@ onSearchChange = ({ value }) => {
   };
 
   render() {
-    console.log(this.clickAddEntity)
-
     return (
       <div>
         <div className="editor" onClick={this.focus}>
-          <button onClick={this.clickAddEntity.bind(this)} >  New entity </button>
           <ColorControls
             editorState={this.state.editorState}
             onToggle={this.toggleColor}
@@ -208,23 +197,13 @@ onSearchChange = ({ value }) => {
             editorState={this.state.editorState}
             onToggle={this.toggleInlineStyle}
           />
-
           <Editor
-            blockStyleFn={getBlockStyle}
-            customStyleMap={colorStyleMap}
             editorState={this.state.editorState}
             onChange={this.onChange}
             plugins={plugins}
             ref={(element) => { this.editor = element; }}
-            onTab={this.onTab}
-            spellCheck={true}
-            decorators={customDecorator}
           />
-          <MentionSuggestions
-          onSearchChange={this.onSearchChange}
-          suggestions={this.state.suggestions}
-          onAddMention={this.onAddMention}
-        />
+          <AlignmentTool />
         </div>
       </div>
     );
@@ -241,63 +220,6 @@ onSearchChange = ({ value }) => {
         {label: 'Indigo', style: 'indigo'},
         {label: 'Violet', style: 'violet'},
       ];
-//1
-
-
-class StyleButton extends React.Component {
-      constructor() {
-        super();
-        this.onToggle = (e) => {
-          e.preventDefault();
-          this.props.onToggle(this.props.style);
-        };
-      }
-
-      render() {
-        let className = 'RichEditor-styleButton';
-        if (this.props.active) {
-          className += ' RichEditor-activeButton';
-        }
-
-        return (
-          <span className={className} onMouseDown={this.onToggle}>
-            {this.props.label}
-          </span>
-        );
-      }
-    }
-
-
-      class StyleColorButton extends React.Component {
-        constructor(props) {
-          super(props);
-          this.onToggle = (e) => {
-            e.preventDefault();
-            this.props.onToggle(this.props.style);
-          };
-        }
-
-        render() {
-          let style;
-          if (this.props.active) {
-            style = {...styles.styleButton, ...colorStyleMap[this.props.style]};
-          } else {
-            style = styles.styleButton;
-          }
-
-          let className = 'RichEditor-styleButton';
-          if (this.props.active) {
-            className += ' RichEditor-activeButton';
-          }
-
-          return (
-            <span className={className} style={style} onMouseDown={this.onToggle}>
-              {this.props.label}
-            </span>
-          );
-        }
-      }
-
 
 
 const ColorControls = (props) => {
@@ -305,7 +227,7 @@ const ColorControls = (props) => {
   return (
     <div style={styles.controls}>
       {COLORS.map(type =>
-        <StyleColorButton
+        <StyleButton
           active={currentStyle.has(type.style)}
           label={type.label}
           onToggle={props.onToggle}
@@ -371,7 +293,6 @@ const colorStyleMap = {
   },
 };
 
-
       // style 1
       // Custom overrides for "code" style.
       const styleMap = {
@@ -389,9 +310,28 @@ const colorStyleMap = {
           default: return null;
         }
       }
+      class StyleButton extends React.Component {
+        constructor() {
+          super();
+          this.onToggle = (e) => {
+            e.preventDefault();
+            this.props.onToggle(this.props.style);
+          };
+        }
 
+        render() {
+          let className = 'RichEditor-styleButton';
+          if (this.props.active) {
+            className += ' RichEditor-activeButton';
+          }
 
-
+          return (
+            <span className={className} onMouseDown={this.onToggle}>
+              {this.props.label}
+            </span>
+          );
+        }
+      }
 
       const BLOCK_TYPES = [
         {label: 'H1', style: 'header-one'},

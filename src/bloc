@@ -3,7 +3,9 @@ import { Entity, Modifier, CompositeDecorator, convertFromRaw, EditorState,RichU
 import Editor from 'draft-js-plugins-editor';
 import initialState from './initialeStateEditor.js'
 
+import { defaultSuggestionsFilter } from 'draft-js-mention-plugin'
 import Plugins from './createPlugins.js'
+import { AlignmentTool , MentionSuggestions } from './createPlugins.js'
 import mentions from './mentions.js'
 const plugins = Plugins()
 //import '..\\node_modules\\draft-js-image-plugin\\lib\\plugin.css';
@@ -11,11 +13,7 @@ import '..\\node_modules\\draft-js-focus-plugin\\lib\\plugin.css'
 import '..\\node_modules\\draft-js-mention-plugin\\lib\\plugin.css'
 //import '.\\RichEditor.css'
 //import '..\\node_modules\\draft-js-dnd-plugin\\lib\\plugin.css'
-import createMentionPlugin, { defaultSuggestionsFilter } from 'draft-js-mention-plugin'; // eslint-disable-line import/no-unresolved
 
-const mentionPlugin = createMentionPlugin();
-
-export const { MentionSuggestions } = mentionPlugin;
 
 
       /**
@@ -76,6 +74,7 @@ export default class CustomImageEditor extends Component {
     this.toggleColor = (toggledColor) => this._toggleColor(toggledColor);
     this.toggleBlockType = (type) => this._toggleBlockType(type);
     this.toggleInlineStyle = (style) => this._toggleInlineStyle(style);
+    this.clickAddEntity = () => this.clickAddEntity.bind(this)
 
 }
 
@@ -137,19 +136,16 @@ _toggleColor(toggledColor) {
 
 clickAddEntity(){
   const entityKey = Entity.create('LINK', 'MUTABLE', {href: 'http://www.zombo.com'});
-
   const contentState=this.state.editorState.getCurrentContent();
   const selectionState=this.state.editorState.getSelection();
+  console.log(contentState)
+
+  console.log(selectionState)
   const contentStateWithLink = Modifier.applyEntity(
   contentState,
   selectionState,
   entityKey
 );
-console.log("av")
-this.onChange(contentStateWithLink);
-console.log(this.state.editorState)
-console.log(this.state.editorState.getCurrentContent())
-console.log("ap")
 }
 
 
@@ -190,12 +186,10 @@ onSearchChange = ({ value }) => {
   };
 
   render() {
-    console.log(this.clickAddEntity)
-
     return (
       <div>
         <div className="editor" onClick={this.focus}>
-          <button onClick={this.clickAddEntity.bind(this)} >  New entity </button>
+          <button onclick={this.clickAddEntity} >  New entity </button>
           <ColorControls
             editorState={this.state.editorState}
             onToggle={this.toggleColor}
@@ -225,6 +219,7 @@ onSearchChange = ({ value }) => {
           suggestions={this.state.suggestions}
           onAddMention={this.onAddMention}
         />
+          <AlignmentTool />
         </div>
       </div>
     );

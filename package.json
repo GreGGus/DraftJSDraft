@@ -6,14 +6,27 @@
     "react-scripts": "0.8.5"
   },
   "dependencies": {
+    "axios": "^0.15.2",
+    "babel-runtime": "^6.22.0",
     "draft-js-alignment-plugin": "^2.0.0-beta9",
     "draft-js-dnd-plugin": "^2.0.0-beta9",
+    "draft-js-export-html": "^0.5.2",
     "draft-js-focus-plugin": "^2.0.0-beta9",
     "draft-js-image-plugin": "^2.0.0-beta9",
+    "draft-js-mention-plugin": "^2.0.0-beta9",
     "draft-js-plugins-editor": "^2.0.0-beta9",
     "draft-js-resizeable-plugin": "^2.0.0-beta9",
     "react": "^15.4.2",
-    "react-dom": "^15.4.2"
+    "react-day-picker": "^3.1.1",
+    "react-dom": "^15.4.2",
+    "react-icons": "^2.2.3",
+    "react-redux": "^4.4.6",
+    "react-router": "^3.0.0",
+    "redux": "^3.6.0",
+    "redux-saga": "^0.13.0",
+    "semantic-ui-css": "^2.2.4",
+    "semantic-ui-react": "^0.64.3",
+    "stevensacks-draft-js-mention-plugin": "^2.0.0-beta.4"
   },
   "scripts": {
     "start": "react-scripts start",

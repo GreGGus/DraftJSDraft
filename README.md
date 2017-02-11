@@ -13,4 +13,4 @@
 
 *draft-js-resizeable-plugin*
 
-** IN PROGRESS **
+**IN PROGRESS**
